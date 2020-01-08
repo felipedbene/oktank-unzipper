@@ -67,7 +67,7 @@ class imageProcessor():
 if __name__ == "__main__" :
     proceso = imageProcessor()
     while len(proceso.process_queue) == 0 :
-        self.logger.info("Polling for messages")
+        print("Polling for messages")
         proceso.read_queue()
     proceso.unzipfiles()
     proceso.stop_ec2()
