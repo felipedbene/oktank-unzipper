@@ -16,7 +16,7 @@ class imageProcessor():
   
 
     def read_queue(self) :
-        sqs = boto3.resource('sqs')
+        sqs = boto3.resource('sqs',region_name='us-east-1')
         # Get the queue
         queue = sqs.get_queue_by_name(QueueName=self.queue_name)
 
