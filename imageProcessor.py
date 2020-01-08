@@ -56,7 +56,7 @@ class imageProcessor():
                         self.logger.info("Uploading {}".format(key_dest_prefix + tar_resource.name))
                         s3_client.upload_fileobj(BytesIO(inner_file_bytes), Bucket = bucket_dest, Key = key_dest_prefix + tar_resource.name)
 
-    def stop_ec2():
+    def stop_ec2(self):
 
         conn = boto.ec2.connect_to_region("us-east-1")
         # Get the current instance's id
@@ -69,6 +69,6 @@ if __name__ == "__main__" :
     while len(proceso.process_queue) == 0 :
         print("Polling for messages")
         proceso.read_queue()
-    proceso.unzipfiles()
+    #proceso.unzipfiles()
     proceso.stop_ec2()
     
