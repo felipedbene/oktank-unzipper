@@ -6,6 +6,7 @@ import boto.utils
 import logging
 import json
 from io import BytesIO
+import time
 
 class imageProcessor():
 
@@ -69,6 +70,7 @@ if __name__ == "__main__" :
     while len(proceso.process_queue) == 0 :
         print("Polling for messages")
         proceso.read_queue()
+        time.sleep(1)
     #proceso.unzipfiles()
     proceso.stop_ec2()
     
