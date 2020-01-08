@@ -49,7 +49,7 @@ class imageProcessor():
             print("Doing a body read")
             input_tar_file = s3_client.get_object(Bucket = bucket, Key = key)
             input_tar_content = input_tar_file['Body'].read()
-            print"Processing {}".format(input_tar_file))
+            print("Processing {}".format(input_tar_file))
             with tarfile.open(fileobj = BytesIO(input_tar_content)) as tar:
                 for tar_resource in tar:
                     if (tar_resource.isfile()):
