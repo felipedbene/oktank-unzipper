@@ -19,17 +19,21 @@ class imageProcessor():
     def read_queue(self) :
         sqs = boto3.resource('sqs',region_name='us-east-1')
         # Get the queue
-        queue = sqs.get_queue_by_name(QueueName=self.queue_name)
+        self.queue = sqs.get_queue_by_name(QueueName=self.queue_name)
 
         # Process messages by printing out body and optional author name
-        for message in queue.receive_messages():
+        for message in self.queue.receive_messages():
             message_json = json.loads(message.body)
             message_dict = json.loads(message_json['Message'])
             self.process_queue.append( ( message_dict['Records'][0]['s3']['bucket']['name'], 
             message_dict['Records'][0]['s3']['object']['key'] ) )
             print( "added message")
+            
         print("Finished message queue processing")
 
+    def purgeQueue(self):
+        self.queue.purge()
+        print("Queue purged")
 
     def unzipfiles(self):
 
@@ -72,5 +76,6 @@ if __name__ == "__main__" :
         proceso.read_queue()
         time.sleep(1)
     proceso.unzipfiles()
+    proceso.purgeQueue()
     proceso.stop_ec2()
     
