@@ -5,7 +5,7 @@ import tarfile
 from io import BytesIO
 s3_client = boto3.client('s3')
 
-def lambda_handler(event, context):
+def lambda_handler():
 
     #bucket = event['Records'][0]['s3']['bucket']['name']
     #key = event['Records'][0]['s3']['object']['key']
