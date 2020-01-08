@@ -29,7 +29,7 @@ class imageProcessor():
             message_dict['Records'][0]['s3']['object']['key'] ) )
             print( "added message")
             
-        print("Finished message queue processing")
+        print("Finished polling loop")
 
     def purgeQueue(self):
         self.queue.purge()
@@ -70,11 +70,13 @@ class imageProcessor():
         conn.stop_instances(instance_ids=[my_id])
 
 if __name__ == "__main__" :
+    timer = 0
     proceso = imageProcessor()
-    while len(proceso.process_queue) == 0 :
-        print("Polling for messages")
+    while len(proceso.process_queue) == 0 and timer < 30 :
+        print("Polling for messages : " + str(timer+1) )
         proceso.read_queue()
         time.sleep(1)
+        timer+=1
     proceso.unzipfiles()
     proceso.purgeQueue()
     proceso.stop_ec2()
