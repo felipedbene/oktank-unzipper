@@ -71,6 +71,6 @@ if __name__ == "__main__" :
         print("Polling for messages")
         proceso.read_queue()
         time.sleep(1)
-    #proceso.unzipfiles()
+    proceso.unzipfiles()
     proceso.stop_ec2()
     
