@@ -1,6 +1,10 @@
 import boto3
 import botocore
 import tarfile
+import boto.ec2
+import boto.utils
+import logging
+logger=logging.getLogger()
 
 from io import BytesIO
 s3_client = boto3.client('s3')
@@ -27,7 +31,13 @@ def lambda_handler():
                 inner_file_bytes = tar.extractfile(tar_resource).read()
                 s3_client.upload_fileobj(BytesIO(inner_file_bytes), Bucket = bucket_dest, Key = key_dest_prefix + tar_resource.name)
 
+def stop_ec2():
 
+    conn = boto.ec2.connect_to_region("us-east-1")
+    # Get the current instance's id
+    my_id = boto.utils.get_instance_metadata()['instance-id']
+    logger.info(' stopping EC2 :'+str(my_id))
+    conn.stop_instances(instance_ids=[my_id])
 
 if __name__ == "__main__":
     lambda_handler()
