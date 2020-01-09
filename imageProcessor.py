@@ -21,6 +21,7 @@ class imageProcessor():
         self.video_name = 'felideo.mp4'
         self.width = 540
         self.height = 390
+        self.tmp = '/tmp'
   
 
     def read_queue(self) :
@@ -48,18 +49,12 @@ class imageProcessor():
         #key = event['Records'][0]['s3']['object']['key']
         s3_client = boto3.client('s3')
 
-        # Define the codec and create VideoWriter object
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use lower case
-        video = cv2.VideoWriter(self.video_name, fourcc, 20.0, (self.width, self.height))
-
         for file in self.process_queue :
 
             bucket = file[0]
             key = file[1]
-            
-            bucket_dest = 'sm-benfelip-input'
-            key_dest_prefix = 'private/' + key.split('/')[0] + '/'
-            
+            tmp_folder_name = key.split("/")[-1]
+            print(tmp_folder_name)
             
             print("Doing a body read")
             input_tar_file = s3_client.get_object(Bucket = bucket, Key = key)
@@ -69,14 +64,24 @@ class imageProcessor():
                 for tar_resource in tar:
                     if (tar_resource.isfile()):
                         inner_file_bytes = tar.extractfile(tar_resource).read()
-                        print("Feeding files as BytesIO {}".format(key_dest_prefix + tar_resource.name))
-                        img_stream = BytesIO(inner_file_bytes)
-                        img = cv2.imdecode(np.fromstring(img_stream.read(), np.uint8), 1)
-                        video.write(img)
-    
+                        print("Inflating file {} to {}".format(tar_resource.name,self.tmp))
+                        f = open(os.path.join(self.tmp,tmp_folder_name,tar_resource.name),"wb")
+                        f.write(inner_file_bytes)
+                        f.close()
+    def makeVideo():
+        image_folder = '.'
+        video_name = self.
 
-                        #s3_client.upload_fileobj(BytesIO(inner_file_bytes), Bucket = bucket_dest, Key = key_dest_prefix + tar_resource.name)
-        #self.purgeQueue()
+        # Define the codec and create VideoWriter object
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use lower case
+        video = cv2.VideoWriter(self.video_name, fourcc, 20.0, (self.width, self.height))
+
+    def sendtoS3():
+
+        bucket_dest = 'sm-benfelip-input'
+        key_dest_prefix = 'private/' + key.split('/')[0] + '/'
+        s3_client.upload_fileobj(BytesIO(inner_file_bytes), Bucket = bucket_dest, Key = key_dest_prefix + tar_resource.name)
+        self.purgeQueue()
 
     def stop_ec2(self):
 
@@ -94,6 +99,7 @@ if __name__ == "__main__" :
         proceso.read_queue()
         time.sleep(1)
         timer+=1
-    proceso.unzipfiles()
+    #proceso.unzipfiles()
+    proceso.makeVideo()
     #proceso.stop_ec2()
     
