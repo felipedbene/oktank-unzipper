@@ -60,6 +60,7 @@ class imageProcessor():
                         inner_file_bytes = tar.extractfile(tar_resource).read()
                         print("Uploading {}".format(key_dest_prefix + tar_resource.name))
                         s3_client.upload_fileobj(BytesIO(inner_file_bytes), Bucket = bucket_dest, Key = key_dest_prefix + tar_resource.name)
+        self.purgeQueue()
 
     def stop_ec2(self):
 
@@ -78,6 +79,5 @@ if __name__ == "__main__" :
         time.sleep(1)
         timer+=1
     proceso.unzipfiles()
-    proceso.purgeQueue()
     proceso.stop_ec2()
     
