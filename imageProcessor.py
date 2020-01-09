@@ -7,6 +7,10 @@ import logging
 import json
 from io import BytesIO
 import time
+import cv2
+import os
+# from cStringIO import StringIO
+import numpy as np
 
 class imageProcessor():
 
@@ -14,6 +18,9 @@ class imageProcessor():
         self.queue_name = 'files2Unzip'
         self.logger=logging.getLogger()
         self.process_queue = list()
+        self.video_name = 'felideo.mp4'
+        self.width = 540
+        self.height = 390
   
 
     def read_queue(self) :
@@ -40,7 +47,11 @@ class imageProcessor():
         #bucket = event['Records'][0]['s3']['bucket']['name']
         #key = event['Records'][0]['s3']['object']['key']
         s3_client = boto3.client('s3')
-        
+
+        # Define the codec and create VideoWriter object
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use lower case
+        video = cv2.VideoWriter(self.video_name, fourcc, 20.0, (self.width, self.height))
+
         for file in self.process_queue :
 
             bucket = file[0]
@@ -58,9 +69,14 @@ class imageProcessor():
                 for tar_resource in tar:
                     if (tar_resource.isfile()):
                         inner_file_bytes = tar.extractfile(tar_resource).read()
-                        print("Uploading {}".format(key_dest_prefix + tar_resource.name))
-                        s3_client.upload_fileobj(BytesIO(inner_file_bytes), Bucket = bucket_dest, Key = key_dest_prefix + tar_resource.name)
-        self.purgeQueue()
+                        print("Feeding files as BytesIO {}".format(key_dest_prefix + tar_resource.name))
+                        img_stream = BytesIO(inner_file_bytes)
+                        img = cv2.imdecode(np.fromstring(img_stream.read(), np.uint8), 1)
+                        video.write(img)
+    
+
+                        #s3_client.upload_fileobj(BytesIO(inner_file_bytes), Bucket = bucket_dest, Key = key_dest_prefix + tar_resource.name)
+        #self.purgeQueue()
 
     def stop_ec2(self):
 
@@ -79,5 +95,5 @@ if __name__ == "__main__" :
         time.sleep(1)
         timer+=1
     proceso.unzipfiles()
-    proceso.stop_ec2()
+    #proceso.stop_ec2()
     
