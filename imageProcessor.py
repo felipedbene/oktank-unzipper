@@ -107,7 +107,7 @@ class imageProcessor():
             print("Uploading ",item)
             bucket_dest = 'sm-benfelip-input'
             with open(str(item), "rb") as f:
-                key = item.split("/")[-2]
+                key = item.split("/")[-1]
                 s3_client.upload_fileobj(f, Bucket = bucket_dest, Key = str("private/" + key ) )
             
 
