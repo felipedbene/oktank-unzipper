@@ -94,7 +94,7 @@ class imageProcessor():
 
         for image in images:
             img = os.path.join(image_folder, image)
-            print(".", end='')
+            #print(".", end='')
             video.write(cv2.imread(img))
 
         cv2.destroyAllWindows()
