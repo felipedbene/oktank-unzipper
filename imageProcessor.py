@@ -9,8 +9,7 @@ from io import BytesIO
 import time
 import cv2
 import os
-# from cStringIO import StringIO
-import numpy as np
+
 
 class imageProcessor():
 
@@ -18,9 +17,9 @@ class imageProcessor():
         self.queue_name = 'files2Unzip'
         self.logger=logging.getLogger()
         self.process_queue = list()
-        self.video_name = 'felideo.mp4'
         self.width = 540
         self.height = 390
+        self.sorted_video_list = list()
         self.tmp = '/tmp'
   
 
@@ -53,8 +52,16 @@ class imageProcessor():
 
             bucket = file[0]
             key = file[1]
-            tmp_folder_name = key.split("/")[-1]
-            print(tmp_folder_name)
+            job_name = key.split("/")[-3]
+            self.tmp += "/" + job_name
+            self.video_name = job_name
+
+            if not os.path.exists(self.tmp):
+                try:
+                    os.makedirs(self.tmp)
+                except OSError as exc: # Guard against race condition
+                    if exc.errno != errno.EEXIST:
+                        raise
             
             print("Doing a body read")
             input_tar_file = s3_client.get_object(Bucket = bucket, Key = key)
@@ -63,25 +70,46 @@ class imageProcessor():
             with tarfile.open(fileobj = BytesIO(input_tar_content)) as tar:
                 for tar_resource in tar:
                     if (tar_resource.isfile()):
+                        full_path = os.path.join(self.tmp,tar_resource.name)
                         inner_file_bytes = tar.extractfile(tar_resource).read()
-                        print("Inflating file {} to {}".format(tar_resource.name,self.tmp))
-                        f = open(os.path.join(self.tmp,tmp_folder_name,tar_resource.name),"wb")
+                        print("I", end='')
+                        f = open(full_path,"wb")
                         f.write(inner_file_bytes)
                         f.close()
-    def makeVideo():
-        image_folder = '.'
-        video_name = self.
+                        
+            #Finally render a video with those pics
+            self.makeVideo()
 
+    def makeVideo(self):
+        image_folder = self.tmp
+        sorted_video = os.path.join(self.tmp,self.video_name)+".mp4"
+        self.sorted_video_list.append(sorted_video)
+
+        images = [img for img in os.listdir(image_folder) if img.endswith(".jpg")]
+        images.sort()
+        print("creating video : ", sorted_video)
         # Define the codec and create VideoWriter object
         fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use lower case
-        video = cv2.VideoWriter(self.video_name, fourcc, 20.0, (self.width, self.height))
+        video = cv2.VideoWriter(sorted_video , fourcc, 20.0, (self.width, self.height))
 
-    def sendtoS3():
+        for image in images:
+            img = os.path.join(image_folder, image)
+            print(".", end='')
+            video.write(cv2.imread(img))
 
-        bucket_dest = 'sm-benfelip-input'
-        key_dest_prefix = 'private/' + key.split('/')[0] + '/'
-        s3_client.upload_fileobj(BytesIO(inner_file_bytes), Bucket = bucket_dest, Key = key_dest_prefix + tar_resource.name)
-        self.purgeQueue()
+        cv2.destroyAllWindows()
+        video.release()
+
+    def sendtoS3(self):
+        s3_client = boto3.client('s3')
+        print(self.sorted_video_list)
+        for item in self.sorted_video_list :
+            print("Uploading ",item)
+            bucket_dest = 'sm-benfelip-input'
+            with open(str(item), "rb") as f:
+                key = item.split("/")[-2]
+                s3_client.upload_fileobj(f, Bucket = bucket_dest, Key = str("private/" + key ) )
+            
 
     def stop_ec2(self):
 
@@ -95,11 +123,13 @@ if __name__ == "__main__" :
     timer = 0
     proceso = imageProcessor()
     while len(proceso.process_queue) == 0 and timer < 30 :
-        print("Polling for messages : " + str(timer+1) )
+        print("Polling for messages : ")
+        print( str(timer+1), end=' ' )
         proceso.read_queue()
         time.sleep(1)
         timer+=1
-    #proceso.unzipfiles()
-    proceso.makeVideo()
+    proceso.unzipfiles()
+    #proceso.makeVideo()
+    proceso.sendtoS3()
     #proceso.stop_ec2()
     
