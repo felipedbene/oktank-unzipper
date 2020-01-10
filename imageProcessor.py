@@ -37,6 +37,7 @@ class imageProcessor():
             print( "added message")
             
         print("Finished polling loop")
+        self.purgeQueue()
 
     def purgeQueue(self):
         self.queue.purge()
