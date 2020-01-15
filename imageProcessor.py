@@ -21,6 +21,7 @@ class imageProcessor():
         self.height = 390
         self.sorted_video_list = list()
         self.tmp = '/tmp'
+
   
 
     def read_queue(self) :
@@ -35,13 +36,16 @@ class imageProcessor():
             self.process_queue.append( ( message_dict['Records'][0]['s3']['bucket']['name'], 
             message_dict['Records'][0]['s3']['object']['key'] ) )
             print( "added message")
+            message.delete()
+            print( "deleted message")
             
         print("Finished polling loop")
-        self.purgeQueue()
+        
 
-    def purgeQueue(self):
-        self.queue.purge()
-        print("Queue purged")
+    def purgeMsg(self):
+        #self.message.delete()
+        #self.queue.purge()
+        print("Messsage purged")
 
     def unzipfiles(self):
 
