@@ -91,6 +91,9 @@ class imageProcessor():
         print("creating video : ", sorted_video)
         # Define the codec and create VideoWriter object
         fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use lower case
+        #fourcc = 0x00000021
+        #fourcc = 0x31307661
+        #fourcc = -1
         video = cv2.VideoWriter(sorted_video , fourcc, 20.0, (self.width, self.height))
 
         for image in images:
@@ -106,19 +109,12 @@ class imageProcessor():
         print(self.sorted_video_list)
         for item in self.sorted_video_list :
             print("Uploading ",item)
-            bucket_dest = 'sm-benfelip-input'
+            bucket_dest = 'sm-benfelip-video-input'
             with open(str(item), "rb") as f:
                 key = item.split("/")[-1]
-                s3_client.upload_fileobj(f, Bucket = bucket_dest, Key = str("private/" + key ) )
+                s3_client.upload_fileobj(f, Bucket = bucket_dest, Key = str("" + key ) )
             
 
-    def stop_ec2(self):
-
-        conn = boto.ec2.connect_to_region("us-east-1")
-        # Get the current instance's id
-        my_id = boto.utils.get_instance_metadata()['instance-id']
-        print('Stopping EC2 :'+str(my_id))
-        conn.stop_instances(instance_ids=[my_id])
 
 if __name__ == "__main__" :
     timer = 0
@@ -130,7 +126,6 @@ if __name__ == "__main__" :
         time.sleep(1)
         timer+=1
     proceso.unzipfiles()
-    #proceso.makeVideo()
+    proceso.makeVideo()
     proceso.sendtoS3()
-    #proceso.stop_ec2()
     
